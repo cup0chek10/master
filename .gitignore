@@ -1,0 +1,10 @@
+.env
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+backend/.venv/
+backend/__pycache__/
+backend/bot/__pycache__/
+backend/tests/__pycache__/
+backend/atelier.db
