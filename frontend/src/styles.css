@@ -24,6 +24,9 @@ body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream);
 button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:active { transform: scale(.97); }
 .app-shell { width: 100%; max-width: 520px; min-height: 100vh; margin: auto; position: relative; overflow: hidden; background: var(--cream); padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+.fatal-error { min-height: 100vh; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--cream); }
+.fatal-error h1 { margin: 22px 0 10px; font-size: 30px; }
+.fatal-error p { max-width: 280px; margin-bottom: 22px; color: var(--muted); font-size: 12px; line-height: 1.7; }
 .topbar { height: 66px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(44,42,46,.055); background: rgba(248,245,242,.94); }
 .brand { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 700; letter-spacing: .2em; }
 .brand-mark { width: 31px; height: 31px; border: 1px solid #c9a961; border-radius: 50%; display: grid; place-items: center; color: #9b8aa6; font: 20px 'DM Serif Display', serif; letter-spacing: 0; }

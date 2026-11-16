@@ -1,6 +1,34 @@
-import WebApp from '@twa-dev/sdk';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+type TelegramUser = { id: number; first_name: string; username?: string };
+type TelegramButton = {
+  hide: () => void;
+  show?: () => void;
+  setParams?: (params: {
+    text?: string;
+    is_visible?: boolean;
+    is_active?: boolean;
+    color?: string;
+    text_color?: string;
+  }) => void;
+  onClick?: (callback: () => void) => void;
+  offClick?: (callback: () => void) => void;
+};
+
+export type TelegramBridge = {
+  initData?: string;
+  initDataUnsafe?: { user?: TelegramUser };
+  ready?: () => void;
+  expand?: () => void;
+  MainButton?: TelegramButton;
+  BackButton?: TelegramButton;
+};
+
+declare global {
+  interface Window {
+    Telegram?: { WebApp?: TelegramBridge };
+  }
+}
 
 export type Service = { id: number; name: string; duration_minutes: number };
 export type Subcategory = { name: string; services: Service[] };
@@ -21,7 +49,8 @@ export type Booking = {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set('Content-Type', 'application/json');
-  if (WebApp.initData) headers.set('X-Telegram-Init-Data', WebApp.initData);
+  const initData = telegramWebApp()?.initData;
+  if (initData) headers.set('X-Telegram-Init-Data', initData);
   const response = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (!response.ok) {
     let message = 'Не вдалося виконати запит. Спробуйте ще раз.';
@@ -57,10 +86,10 @@ export const api = {
     }),
 };
 
-export function telegramUser() {
-  return WebApp.initDataUnsafe?.user;
+export function telegramUser(): TelegramUser | undefined {
+  return telegramWebApp()?.initDataUnsafe?.user;
 }
 
-export function telegramWebApp() {
-  return WebApp;
+export function telegramWebApp(): TelegramBridge | undefined {
+  return window.Telegram?.WebApp;
 }

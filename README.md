@@ -56,7 +56,7 @@ master/
    npm run dev -- --host 0.0.0.0
    ```
 
-4. Налаштуйте BotFather: додайте HTTPS URL Mini App та команду меню. Для тесту API без Telegram доступний лише режим `DEV_AUTH=true`; він призначений виключно для локального запуску.
+4. Налаштуйте BotFather: додайте HTTPS URL Mini App та команду меню. Для тесту API без Telegram доступний лише режим `DEV_AUTH=true`; він призначений виключно для локального запуску. Якщо інший процес уже виконує polling цього бота, встановіть `BOT_POLLING_ENABLED=false`, щоб уникнути конфлікту.
 
 SQLite-файл `backend/atelier.db` створюється автоматично. Для PostgreSQL задайте `DATABASE_URL=postgresql+asyncpg://...`.
 
@@ -64,9 +64,9 @@ SQLite-файл `backend/atelier.db` створюється автоматичн
 
 ## Render
 
-Створіть Web Service з кореневою директорією `backend`, командою запуску `uvicorn main:app --host 0.0.0.0 --port $PORT` і Python 3.11. Додайте PostgreSQL та змінні `BOT_TOKEN`, `DATABASE_URL`, `MINIAPP_URL`, `MASTER_TELEGRAM_ID`. Не вмикайте `DEV_AUTH` у продакшені. Frontend можна розгорнути як Static Site з директорією `frontend`, build-командою `npm ci && npm run build` і publish-директорією `dist`; встановіть `VITE_API_URL` на URL backend. Обидва URL для Telegram мають використовувати HTTPS.
+Використовуйте конфігурацію з `render.yaml` у корені проєкту. Web Service збирає frontend у `backend/static`, встановлює backend-залежності та обслуговує Mini App й API на одному домені. Задайте `BOT_TOKEN`, `MASTER_TELEGRAM_ID`, `MINIAPP_URL` і PostgreSQL `DATABASE_URL`; не вмикайте `DEV_AUTH` у production. `VITE_API_URL` можна не задавати, коли Mini App обслуговується цим самим backend.
 
-Backend запускає polling бота та планувальник нагадувань у тому самому процесі. На Render не запускайте додаткову копію polling-процесу з тим самим токеном.
+Backend запускає polling бота та планувальник нагадувань у тому самому процесі. Для API-сервісу без polling можна встановити `BOT_POLLING_ENABLED=false`. Не запускайте кілька копій polling-процесу з тим самим токеном.
 
 ## Перевірка
 

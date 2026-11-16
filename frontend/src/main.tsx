@@ -4,6 +4,38 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles.css';
 
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Mini App failed to render', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <main className="fatal-error" role="alert">
+          <span className="brand-mark">a.</span>
+          <h1>Сторінка тимчасово недоступна</h1>
+          <p>Оновіть сторінку. Якщо помилка повториться, спробуйте пізніше.</p>
+          <button className="primary-button" onClick={() => window.location.reload()}>
+            Оновити сторінку
+          </button>
+        </main>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -13,31 +45,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Безопасная инициализация Telegram WebApp
-// Используем window.Telegram напрямую, чтобы избежать ошибок с обертками SDK
-const initTelegram = () => {
-  // @ts-ignore
-  const tg = window.Telegram?.WebApp;
-  
-  if (tg && typeof tg.ready === 'function') {
-    tg.ready();
-    tg.expand();
-    // Устанавливаем цвет шапки (опционально)
-    if (typeof tg.setHeaderColor === 'function') {
-      tg.setHeaderColor('#F8F5F2');
-    }
-  } else {
-    console.warn('Telegram WebApp не инициализирован. Убедитесь, что вы открываете приложение внутри Telegram.');
-  }
-};
-
-// Вызываем инициализацию до рендера React
-initTelegram();
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </AppErrorBoundary>
   </React.StrictMode>
 );

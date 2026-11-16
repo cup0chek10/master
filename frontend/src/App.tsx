@@ -112,8 +112,8 @@ function App() {
   });
 
   useEffect(() => {
-    webApp.ready();
-    webApp.expand();
+    webApp?.ready?.();
+    webApp?.expand?.();
     const refresh = () => {
       if (document.visibilityState === 'visible') {
         void queryClient.invalidateQueries({ queryKey: ['bookings'] });
@@ -147,16 +147,16 @@ function App() {
     : step === 5 ? 'Мої записи' : 'Продовжити';
 
   useEffect(() => {
-    const mainButton = webApp.MainButton;
-    if (screen !== 'booking' || !canContinue) {
-      mainButton.hide();
+    const mainButton = webApp?.MainButton;
+    if (!mainButton || screen !== 'booking' || !canContinue) {
+      mainButton?.hide();
       return;
     }
-    mainButton.setParams({ text: mainText, is_visible: true, is_active: !createMutation.isPending && !rescheduleMutation.isPending, color: '#9b8aa6', text_color: '#ffffff' });
+    mainButton.setParams?.({ text: mainText, is_visible: true, is_active: !createMutation.isPending && !rescheduleMutation.isPending, color: '#9b8aa6', text_color: '#ffffff' });
     const invoke = () => mainAction.current();
-    mainButton.onClick(invoke);
+    mainButton.onClick?.(invoke);
     return () => {
-      mainButton.offClick(invoke);
+      mainButton.offClick?.(invoke);
       mainButton.hide();
     };
   }, [canContinue, mainText, screen, webApp, createMutation.isPending, rescheduleMutation.isPending]);
@@ -169,11 +169,12 @@ function App() {
   }, [screen, step]);
 
   useEffect(() => {
-    const backButton = webApp.BackButton;
+    const backButton = webApp?.BackButton;
+    if (!backButton) return;
     if (screen !== 'home' && screen !== 'onboarding') {
-      backButton.show();
-      backButton.onClick(goBack);
-      return () => { backButton.offClick(goBack); backButton.hide(); };
+      backButton.show?.();
+      backButton.onClick?.(goBack);
+      return () => { backButton.offClick?.(goBack); backButton.hide(); };
     }
     backButton.hide();
   }, [goBack, screen, webApp]);
@@ -222,14 +223,12 @@ function App() {
     const slide = slides[onboardingSlide];
     return <main className="onboarding">
       <div className="onboarding-brand"><span className="brand-mark">a.</span><span>ATELIER</span></div>
-      <AnimatePresence mode="wait">
-        <motion.section key={onboardingSlide} className="onboarding-slide" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }}>
+      <motion.section key={onboardingSlide} className="onboarding-slide" initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
           <div className="onboarding-art"><div className="art-ring" /><div className="art-icon">{slide.icon}</div><span className="art-sparkle">✧</span></div>
           <p className="eyebrow">ВАШ РИТУАЛ КРАСИ</p>
           <h1>{slide.title}</h1>
           <p className="muted onboarding-copy">{slide.text}</p>
-        </motion.section>
-      </AnimatePresence>
+      </motion.section>
       <div className="onboarding-footer">
         <div className="dots">{slides.map((_, index) => <span className={index === onboardingSlide ? 'dot active' : 'dot'} key={index} />)}</div>
         <button className="primary-button" onClick={() => onboardingSlide < 2 ? setOnboardingSlide(value => value + 1) : completeOnboarding()}>
@@ -248,9 +247,8 @@ function App() {
       <button className="avatar" aria-label="Профіль" onClick={() => setScreen('profile')}>{user?.first_name?.slice(0, 1) ?? '♡'}</button>
     </header>
 
-    <AnimatePresence mode="wait">
-      <motion.main key={screen + (screen === 'booking' ? step : '')} className="page-content"
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+    <motion.main key={screen + (screen === 'booking' ? step : '')} className="page-content"
+      initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
         {screen === 'home' && <section className="home-screen">
           <div className="hero">
             <div className="hero-image"><div className="hero-monogram">a</div><span className="hero-caption">КРАСА У КОЖНІЙ ДЕТАЛІ</span></div>
@@ -314,7 +312,7 @@ function App() {
             </div>
             <p className="fine-print">Після підтвердження запис з’явиться у розділі «Мої записи». Ми надішлемо нагадування перед візитом.</p>
           </div>}
-          {canContinue && !webApp.initData && <button className="primary-button mobile-continue" onClick={bookingNext} disabled={createMutation.isPending || rescheduleMutation.isPending}>
+          {canContinue && !webApp?.initData && <button className="primary-button mobile-continue" onClick={bookingNext} disabled={createMutation.isPending || rescheduleMutation.isPending}>
             {step === 4 ? (rescheduleId ? 'Підтвердити перенесення' : 'Підтвердити запис') : 'Продовжити'} <ArrowRight size={17} />
           </button>}
         </section>}
@@ -367,8 +365,7 @@ function App() {
           {adminQuery.data && <div className="admin-stats"><div><strong>{adminQuery.data.length}</strong><span>усіх записів</span></div><div><strong>{adminQuery.data.filter(item => item.status === 'pending').length}</strong><span>очікують</span></div><div><strong>{adminQuery.data.filter(item => item.status === 'confirmed').length}</strong><span>підтверджено</span></div></div>}
           {adminQuery.isLoading ? <SkeletonList /> : adminQuery.isError ? <ErrorPanel onRetry={() => void adminQuery.refetch()} /> : <div className="booking-list">{(adminQuery.data ?? []).map(booking => <article className="booking-item" key={booking.id}><div className="booking-item-top"><span className={`status-dot ${booking.status}`} />{statusNames[booking.status]}</div><h2>{booking.service}</h2><p>{booking.client_name} · {readableBookingDate(booking.start_time)}</p>{booking.status === 'pending' && <div className="booking-actions"><button className="outline-button" disabled={decisionMutation.isPending} onClick={() => decisionMutation.mutate({ id: booking.id, decision: 'confirm' })}>Підтвердити</button><button className="quiet-button" disabled={decisionMutation.isPending} onClick={() => decisionMutation.mutate({ id: booking.id, decision: 'reject' })}>Відхилити</button></div>}</article>)}</div>}
         </section>}
-      </motion.main>
-    </AnimatePresence>
+    </motion.main>
 
     {screen !== 'booking' && <nav className="bottom-nav">
       <button className={screen === 'home' ? 'active' : ''} onClick={() => setScreen('home')}><House size={19} /><span>Головна</span></button>

@@ -40,6 +40,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("atelier")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 DEV_AUTH = os.getenv("DEV_AUTH", "false").lower() == "true"
+BOT_POLLING_ENABLED = os.getenv("BOT_POLLING_ENABLED", "true").lower() == "true"
 bot: Bot | None = None
 dispatcher: Dispatcher | None = None
 scheduler: AsyncIOScheduler | None = None
@@ -171,7 +172,7 @@ async def _reminder_job() -> None:
 async def lifespan(_: FastAPI):
     global bot, dispatcher, scheduler, polling_task
     await initialize_database()
-    if BOT_TOKEN:
+    if BOT_TOKEN and BOT_POLLING_ENABLED:
         bot = Bot(BOT_TOKEN)
         dispatcher = Dispatcher()
         dispatcher.include_router(register_handlers(SessionLocal))
@@ -179,6 +180,8 @@ async def lifespan(_: FastAPI):
         scheduler = AsyncIOScheduler(timezone="Europe/Kyiv")
         scheduler.add_job(_reminder_job, "interval", minutes=1, id="booking-reminders", coalesce=True)
         scheduler.start()
+    elif BOT_TOKEN and not BOT_POLLING_ENABLED:
+        logger.info("Bot polling is disabled by BOT_POLLING_ENABLED")
     elif not DEV_AUTH:
         logger.warning("BOT_TOKEN is not set; API is running without bot polling or reminders")
     yield
