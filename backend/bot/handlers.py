@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import html
 import os
 import time
@@ -12,7 +16,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message, ReplyKeyboardMarkup, WebAppInfo
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from ..crud import get_booking, list_bookings
+from crud import get_booking, list_bookings
 
 router = Router(name="atelier")
 
