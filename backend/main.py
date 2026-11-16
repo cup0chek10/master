@@ -24,7 +24,7 @@ from pydantic import ValidationError
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 
-from bot.handlers import master_booking_keyboard, register_handlers
+from .bot.handlers import master_booking_keyboard, register_handlers
 from crud import KYIV, MASTER_ID, available_slots, cancel_booking, create_booking, get_booking, initialize_database, list_bookings, mark_reminder, reschedule_booking, upsert_user
 from database import SessionLocal, engine, get_session
 from models import Booking, Service
