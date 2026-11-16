@@ -24,6 +24,8 @@ from aiogram.utils.web_app import safe_parse_webapp_init_data
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
@@ -201,16 +203,17 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root() -> dict:
-    return {"service": "Atelier Booking API", "status": "ok"}
-
-
+# ============================================================
+#  Health-check (для пинга и отладки)
+# ============================================================
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
 
 
+# ============================================================
+#  API-эндпоинты (все под /api/...)
+# ============================================================
 @app.get("/api/services")
 async def services(session=Depends(get_session), _: dict = Depends(authenticated_user)) -> list[dict]:
     rows = (await session.scalars(select(Service).where(Service.active.is_(True)).order_by(Service.id))).all()
@@ -332,3 +335,31 @@ async def master_confirm(body: MasterDecision, master: dict = Depends(master_use
         except Exception:
             logger.exception("Could not notify client about master decision booking_id=%s", booking.id)
     return {"id": booking.id, "status": booking.status}
+
+
+# ============================================================
+#  Раздача Mini App (статика из frontend/dist → backend/static)
+#  ВАЖНО: этот блок должен быть ПОСЛЕДНИМ в файле!
+# ============================================================
+STATIC_DIR = Path(__file__).parent / "static"
+
+if STATIC_DIR.exists() and (STATIC_DIR / "index.html").exists():
+    assets_dir = STATIC_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        if full_path.startswith(("api/", "health", "docs", "openapi", "redoc")):
+            raise HTTPException(status_code=404, detail="Not Found")
+        return FileResponse(STATIC_DIR / "index.html")
+else:
+    logger.warning("Frontend build not found at %s — Mini App will not be served", STATIC_DIR)
+
+    @app.get("/")
+    async def root_fallback() -> dict:
+        return {
+            "service": "Atelier Booking API",
+            "status": "ok",
+            "note": "Frontend not built. Place build output in backend/static/",
+        }
